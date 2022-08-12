@@ -5,6 +5,7 @@ import {
   getAllSignatures,
   insertSignature,
   removeSignatureByEpoch,
+  updateSignatureByEpoch,
 } from "./signature/model";
 
 const app = express();
@@ -96,5 +97,37 @@ app.delete("/signatures/:epoch", (req, res) => {
     });
   }
 });
+
+app.put("/signatures/:epoch", (req, res) => {
+  const { name, message } = req.body;
+  const epochId = parseInt(req.params.epoch);
+  const signatureToUpdate = findSignatureByEpoch(epochId);
+  let oldName: string | undefined = undefined;
+  let oldMessage: string | undefined = undefined;
+  if (signatureToUpdate) {
+    oldName = signatureToUpdate.name;
+    oldMessage = signatureToUpdate.message;
+  } 
+  const updateProperties = {
+      name: typeof name === "string" ? name : oldName,
+      message: typeof message === "string" ? message: oldMessage,
+    } ;
+  const updatedSignature = updateSignatureByEpoch(epochId, updateProperties);
+  if (updatedSignature) {
+    res.status(200).json({
+      status: "success",
+      data: {
+        signature: updatedSignature,
+      },
+    });
+  } else  {
+    res.status(404).json({
+      status: "fail",
+      data: {
+        epochId: "Could not find signature",
+      },
+    });
+  }
+})
 
 export default app;

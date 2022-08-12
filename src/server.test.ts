@@ -5,6 +5,7 @@ import {
   findSignatureByEpoch,
   getAllSignatures,
   insertSignature,
+  removeSignatureByEpoch,
   Signature,
   updateSignatureByEpoch,
 } from "./signature/model";
@@ -36,6 +37,41 @@ describe("GET /signatures", () => {
     expect(response.body.data.signatures).toStrictEqual(mockSignaturesResponse);
   });
 });
+
+describe("DELETE /signatures/:epoch", () => {
+  const passingEpochId = 1614096121305;
+  const passingSignature = {
+    epochId: passingEpochId,
+    name: "Harrison Ford",
+  };
+
+  beforeEach(() => {
+    resetMockFor(removeSignatureByEpoch, (epochId: number): Signature | null => {
+      return epochId === passingSignature.epochId ? passingSignature : null;
+    });
+  });
+
+  it("calls removeSignatureByEpoch with the given epoch", async () => {
+    await supertest(app).delete("/signatures/1614095562950");
+    expect(removeSignatureByEpoch).toHaveBeenCalledWith(1614095562950);
+  });
+
+  test("when removeSignatureByEpoch deletes a signature, it returns a 200", async () => {
+    const response = await supertest(app).delete(`/signatures/${passingSignature.epochId}`);
+    expect(removeSignatureByEpoch).toReturnWith(passingSignature);
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe("success");
+  });
+
+  test("when removeSignatureByEpoch cannot find a signature, it returns a 404", async () => {
+    const response = await supertest(app).delete("/signatures/23");
+    expect(removeSignatureByEpoch).toReturnWith(null);
+    expect(response.status).toBe(404);
+    expect(response.body.status).toBe("fail");
+    expect(response.body.data).toHaveProperty("epochId");
+    expect(response.body.data.epochId).toMatch(/could not find/i);
+  });
+})
 
 describe("GET /signatures/:epoch", () => {
   const passingEpochId = 1614096121305;
@@ -80,7 +116,7 @@ describe("GET /signatures/:epoch", () => {
   });
 });
 
-describe.skip("PUT /signatures/:epoch", () => {
+describe("PUT /signatures/:epoch", () => {
   const passingEpochId = 1614096121305;
   const passingSignature = {
     epochId: passingEpochId,
