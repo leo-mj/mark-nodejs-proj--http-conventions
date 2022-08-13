@@ -2,7 +2,7 @@ import supertest from "supertest";
 import { getAllSignatures, insertSignature, setAllSignatures, SignatureCollection } from "../signature/model";
 import app  from "../server";
 
-describe("GET sends signature data to the user", () => {
+describe("Running through a sequence of requests works as expected", () => {
     beforeAll(() => {
         setAllSignatures([])
     });
